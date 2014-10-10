@@ -1,15 +1,15 @@
 {
-  "name": "ebola-reader",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "async": "^0.9.0",
-    "winston": "^0.8.0",
-    "winston-elasticsearch": "^0.1.1",
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "name": "ebola-reader",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+	"async": "^0.9.0",
+	"winston": "^0.8.0",
+	"winston-elasticsearch": "^0.1.1"
+    },
+    "scripts": {
+	"test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC"

@@ -41,25 +41,24 @@ function csvToElastic( file , callback){
 	for( var k =2; key_length > k; k++ ){
 	    (function(){
 		var n = k
-
 		var doc = { }
+		var type = line_data[1].replace(/\s/gm,'_').toLowerCase()
+		console.log( "type: " + type )
 		doc['region'] = { name : keys[n] , value : line_data[n] }
 		doc['@timestamp'] = datetime
-
-		es_funcs.push( function( callback ){
-		    console.log( doc )
-		    console.log( country )
-		    global.client.core.index( { index: country , type: line_data[1] , doc : doc } , function( e ,r ){
-			console.log( doc )
-			console.log( e ) 
-			console.log( r )
-			callback( e, r )
+		if( typeof( type ) != undefined )
+		    es_funcs.push( function( callback ){
+			console.log( "index: " ,country )
+			
+			global.client.core.index( { index: country , type : type , doc : doc } , function( e ,r ){
+			    callback( e, r )
+			})
 		    })
-		})
+		
 	    })()
 	}
     }
-
+    
     async.series( es_funcs , callback )
     
 }

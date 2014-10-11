@@ -35,14 +35,18 @@ function csvToElastic( file , callback){
 	    continue
 	var line_data = lines[i].split( ',' )
 	var line_data_count = Object.keys( line_data ).length
+	
 	for( var j = 2; line_data_count > j; j++ ){
+	    var type = line_data[1].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'')
 	    var region = {
-		name : headers[j],
-		value : line_data[j]
+		name : headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,''),
+		value : line_data[j],
+		'@timestamp' : new Date( line_data[0] )
 	    }
 	    var object = { 
 		index : country ,
-		type  : line_data[1],
+		type  : type,
+		
 		doc : region 
 	    }
 	}

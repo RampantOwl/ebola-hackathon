@@ -1,7 +1,7 @@
 var fs       = require( 'fs' )
 var util     = require( 'util' )
 var path     = require( 'path' )
-
+var util     = require( 'util' )
 var async    = require( 'async' )
 var winston  = require('winston')
 
@@ -101,6 +101,8 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		})()
 	}
 	async.series( read_funcs, function( err , data_files ) {
+	    console.log( data_files )
+	    console.log( "__" )
 	    var csv_funcs = new Array()
 	    for( var i=0; Object.keys( data_files ).length > i; i++)
 		for( var j=0; Object.keys( data_files[i] ).length > j; j++){
@@ -108,12 +110,12 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 			var x = i
 			var y = j
 			var file = data_files[x][y]
-			if( typeof( file ) != "undefined")
-			    csv_funcs.push( function( callback ) {
-				csvToElastic( file , callback )
-			    })
+			csv_funcs.push( function( callback ) {			    
+			    csvToElastic( file , callback )
+			})
 		    })()
 		}
+	    	    
 	    async.series( csv_funcs, function( err , results ) {
 		console.log( err )
 		console.log( results )

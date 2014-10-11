@@ -28,6 +28,26 @@ global.logger = new (winston.Logger)({
 
 global.logger.info( "Started" , { dir : config.datadir })
 
+function getObject( file ){
+    var data = fs.readFileSync( file ).toString().split('\n')
+    var lines = data.length
+    var keys = data[0].toLowerCase().replace(' ','_').replace('`','').replace("'",'').split(',')
+    for( var i=1; lines > i; i++){
+	var line_data = data[i].toLowerCase().replace(' ','_').replace('`','').replace("'",'').split(',')
+	var stat = line_data[1]
+
+	if( typeof( stat ) == "undefined" )
+	    continue
+	var key_length = Object.keys( keys ).length
+	var obj = {}
+	for( var k =2; key_length > k; k++ ){
+	    obj[keys[k]] = line_data[k]
+	}
+	obj['@datetime'] = new Date( line_data[0] )
+	obj['_key'] = line_data[1]
+	global.logger.info( obj )
+    }    
+}
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
 
     var count     = Object.keys( files ).length
@@ -58,22 +78,33 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		    read_funcs.push( function( callback ) {
 			fs.readdir( r_path , function( err , files ) {
 			    var file_count = Object.keys( files ).length
+			    var file_list  = new Array()
 			    for( var j = 0; file_count > j; j++){
-				if( typeof( saved[files[j]] ) != "undefined" )
-				    return callback( null )
-				
-				saved[files[j]] = true
-				return files[j] 
+				/* Filter out data files*/
+				if( (files[j].indexOf('.csv') > -1 ) && (files[j].indexOf('ebola_') > -1 || files[j].indexOf('case_') > -1 ) ){
+				    if( typeof( saved[files[j]] ) == "undefined" ){
+					saved[files[j]] = true
+					file_list.push( path.resolve( r_path , files[j] ) )
+				    }
+				}
 			    }
+			    return callback( null , file_list )
 			})
 		    })
 		})()
-	    }
-	async.series( read_funcs, function( new_files ) {
-	    console.log( new_files )
+	}
+	async.series( read_funcs, function( err , data_files ) {
+	    
+	    for( var i=0; Object.keys( data_files ).length > i; i++)
+		for( var j=0; Object.keys( data_files[i] ).length > j; j++){
+		    var object = getObject( data_files[i][j] )
+
+		}
+
+	    //fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
 	})
 	//fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
     })
-
+    
 })
 

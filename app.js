@@ -19,17 +19,45 @@ if ( typeof( saved.files) == "undefined" )
 var config   = require( './config/config' )
 
 function csvToElastic( file , callback){
-    var data = fs.readFileSync( file ).toString().replace(/\r/gm,'\n').split("\n")
-    console.log( data )
+    console.log( "file: " + file )
+    var lines = fs.readFileSync( file ).toString().replace(/\r/gm,'\n').split("\n")
+    
     var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
 
-    var lines = data.length
 
-    var keys = data[0].toLowerCase().split( ',' )
+    var headers = lines[0].toLowerCase().split( ',' )
+    
+    var line_count = Object.keys( lines ).length
+    var objects = new Array()
 
+    for( var i = 1; line_count > i; i++ ){
+	if( typeof( lines[i] ) == "undefined" )
+	    continue
+	var line_data = lines[i].split( ',' )
+	var line_data_count = Object.keys( line_data ).length
+	for( var j = 2; line_data_count > j; j++ ){
+	    var region = {
+		name : headers[j],
+		value : line_data[j]
+	    }
+	    var object = { 
+		index : country ,
+		type  : line_data[1],
+		doc : region 
+	    }
+	}
+	//console.log( util.inspect( object , { depth : null } ) )
+	global.client.core.index( object , function( e ,r ){ } )
+	objects.push ( object )
+	//console.log( lines[i] )
+    }
+    console.log( Object.keys( objects ).length + " objects created" )
+    callback( null , objects )
+    /*      
     for( var i=1; lines > i; i++){
 
 	//var line_data = data[i].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
+	console.log( data[i] )
 	var line_data = data[i].split(',')
 
 	var datetime = new Date( line_data[0] )
@@ -38,30 +66,33 @@ function csvToElastic( file , callback){
 	var obj = {}
 	var es_funcs = []
 
+	console.log( line_data )
 	for( var k =2; key_length > k; k++ ){
 	    (function(){
 		var n = k
+		console.log( line_data[n] )
+		var type = line_data[n][1].replace(/\s/gm,'_')
 		var doc = { }
-		console.log( line_data[1] )
-		if( typeof( line_data[1] ) != "undefined" ){
-		    var type = line_data[1].replace(/\s/gm,'_').toLowerCase()
-		    //console.log( "type: " + type )
+		var header_index = 0
+		console.log( type )    
+		//console.log( "type: " + type )
 		    doc['region'] = { name : keys[n] , value : line_data[n] }
 		    doc['@timestamp'] = datetime
 		    
 		    es_funcs.push( function( callback ){
-			console.log( "index: " ,country )
 			
-			global.client.core.index( { index: country , type : type , doc : doc } , function( e ,r ){
+		    
+		    global.client.core.index( { index: country , type : type , doc : doc } , function( e ,r ){
+			    console.log( "Inserted : " + Object.keys ( r ).length )
 			    callback( e, r )
 			})
 		    })
-		}    
-	    })()	    
+	    })()
 	}
     }
     
     async.series( es_funcs , callback )
+    */
     
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
@@ -125,9 +156,7 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		}
 
 	    async.series( csv_funcs, function( err , results ) {
-		console.log( "I am running all the files" )
-		console.log( err )
-		console.log( results )
+		//console.log( results )
 	    })
 	    
 	    //fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))

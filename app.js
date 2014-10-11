@@ -5,7 +5,7 @@ var util     = require( 'util' )
 var async    = require( 'async' )
 var winston  = require('winston')
 
-var client = require('simple-elasticsearch').client.create( { host: 'radiofreeinternet.com' });
+global.client = require('simple-elasticsearch').client.create( { host : 'radiofreeinternet.com' } )
 
 var DATA_SUBSTR_OFFSET = 5
 var DATA_DIR_NAME_FILTER = "_data"
@@ -45,10 +45,11 @@ function csvToElastic( file , callback){
 		var doc = { }
 		doc['region'] = { name : keys[n] , value : line_data[n] }
 		doc['@timestamp'] = datetime
-		//console.log( doc )
+
 		es_funcs.push( function( callback ){
 		    console.log( doc )
-		    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  , doc : doc } , function( e ,r ){
+		    console.log( country )
+		    global.client.core.index( { index: country , type: line_data[1] , doc : doc } , function( e ,r ){
 			console.log( doc )
 			console.log( e ) 
 			console.log( r )

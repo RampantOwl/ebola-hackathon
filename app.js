@@ -52,8 +52,11 @@ function getObject( file ){
 	obj['index']  = country
 	obj['@datetime'] = new Date( line_data[0] )
 	obj['type'] = line_data[1]
-	client.core.index( obj , function( err , result ){ console.log( err ) } )
-	console.log( obj )
+	client.core.index( obj , function( err , result ){ 
+	    console.log( result )
+	    console.log( err ) 
+	} )
+
     }    
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {

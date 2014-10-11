@@ -38,15 +38,23 @@ function getObject( file ){
 	var obj = {}
 	var es_funcs = new Array()
 	for( var k =2; key_length > k; k++ ){
-	    if( keys[n] == "totals" )
-		continue 
-	    var n = k
-	    var doc = { }
-	    doc['region'] = { name : keys[n] , value : line_data[n] }
-	    doc['@timestamp'] = datetime
-	    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  ,  doc : doc  } , function() { } )
+	    (function(){
+		var n = k
+		if( keys[n] == "totals" )
+		    return 		
+		var doc = { }
+		doc['region'] = { name : keys[n] , value : line_data[n] }
+		doc['@timestamp'] = datetime
+		es_funcs.push( function( callback ){
+		    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  } , callback )
+		})
+	    })()
 	}
     }
+    
+    if( typeof( es_funcs ) != "undefined" )
+	async.series( es_funcs )
+    
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
 

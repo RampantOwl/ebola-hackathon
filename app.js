@@ -35,7 +35,6 @@ function csvToElastic( file , callback){
 	    continue
 	var line_data = lines[i].split( ',' )
 	var line_data_count = Object.keys( line_data ).length
-	
 	for( var j = 2; line_data_count > j; j++ ){
 	    if( typeof(line_data[j]) == "undefined" || line_data[j] == '' || line_data == null)
 		continue

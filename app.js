@@ -37,7 +37,8 @@ function getObject( file ){
     for( var i=1; lines > i; i++){
 	var line_data = data[i].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
 	var stat = line_data[1]
-
+	var datetime = new Date( line_data[0] )
+	
 	if( typeof( stat ) == "undefined" )
 	    continue
 	
@@ -49,10 +50,10 @@ function getObject( file ){
 	    obj[keys[k]] = line_data[k]
 	}
 	obj['index']  = country
-	obj['@datetime'] = new Date( line_data[0] )
+	
 	obj['type'] = line_data[1]
 	
-	client.core.index( { index: 'test' , type: 'foo' , doc : { bar : 'bar' } } , function( err , result ){ 
+	client.core.index( { index: country , type: line_data[1], '@datetime' : datetime  , doc : obj } , function( err , result ){ 
 	    console.log( result )
 	    console.log( err ) 
 	} )

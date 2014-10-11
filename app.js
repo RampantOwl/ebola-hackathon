@@ -55,7 +55,6 @@ function getObject( file ){
 	    
 	    //doc[keys[k]] = line_data[k]
 	    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  ,  doc : doc  } , function( err , result ){ 
-		console.log( "." )
 	    } )
 	}
     }    
@@ -110,6 +109,7 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 	    for( var i=0; Object.keys( data_files ).length > i; i++)
 		for( var j=0; Object.keys( data_files[i] ).length > j; j++){
 		    var object = getObject( data_files[i][j] )
+		    console.log( data_files[i][j] )
 
 		}
 

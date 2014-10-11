@@ -40,8 +40,7 @@ function csvToElastic( file , callback){
 	for( var k =2; key_length > k; k++ ){
 	    (function(){
 		var n = k
-		if( keys[n] == "totals" )
-		    return 		
+
 		var doc = { }
 		doc['region'] = { name : keys[n] , value : line_data[n] }
 		doc['@timestamp'] = datetime

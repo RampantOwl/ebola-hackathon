@@ -47,8 +47,10 @@ function getObject( file ){
 	for( var k =2; key_length > k; k++ ){
 	    if( typeof( line_data[k] ) == "undefined" ) 
 		continue
-	    obj[keys[k]] = line_data[k]
-	    client.core.index( { index: country , type: line_data[1], '@datetime' : datetime  , doc : { keys[k]: line_data[k] } } , function( err , result ){ 
+	    var  doc = {
+		[keys[k]] : line_data[k]
+	    }
+	    client.core.index( { index: country , type: line_data[1], '@datetime' : datetime  , doc : doc , function( err , result ){ 
 		console.log( result )
 		console.log( err ) 
 	    } )

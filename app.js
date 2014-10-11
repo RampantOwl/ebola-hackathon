@@ -45,10 +45,15 @@ function csvToElastic( file , callback){
 		var doc = { }
 		doc['region'] = { name : keys[n] , value : line_data[n] }
 		doc['@timestamp'] = datetime
-		console.log( doc )
+		//console.log( doc )
 		es_funcs.push( function( callback ){
 		    console.log( doc )
-		    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  , doc : doc } , callback )
+		    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  , doc : doc } , function( e ,r ){
+			console.log( doc )
+			console.log( e ) 
+			console.log( r )
+			callback( e, r )
+		    })
 		})
 	    })()
 	}
@@ -116,8 +121,9 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 			})
 		    })()
 		}
-	    	    
+
 	    async.series( csv_funcs, function( err , results ) {
+		console.log( "I am running all the files" )
 		console.log( err )
 		console.log( results )
 	    })

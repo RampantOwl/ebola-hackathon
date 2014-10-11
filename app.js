@@ -43,10 +43,8 @@ function getObject( file ){
 	    doc['region'] = keys[n]
 	    doc['value'] = line_data[n]	    
 	    doc['@timestamp'] = datetime
-	    es_funcs.push( function( callback ) {
-		client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  ,  doc : doc  } , function( err , result ){ 
-		    callback( null, result )
-		})
+	    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  ,  doc : doc  } , function( err , result ){ 
+		callback( null, result )
 	    })
 	}
     }

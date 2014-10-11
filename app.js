@@ -31,16 +31,19 @@ global.logger.info( "Started" , { dir : config.datadir })
 function getObject( file ){
     var data = fs.readFileSync( file ).toString().split('\n')
     var lines = data.length
-    var keys = data[0].toLowerCase().replace(' ','_').replace('`','').replace("'",'').split(',')
+    var keys = data[0].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
     for( var i=1; lines > i; i++){
-	var line_data = data[i].toLowerCase().replace(' ','_').replace('`','').replace("'",'').split(',')
+	var line_data = data[i].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
 	var stat = line_data[1]
 
 	if( typeof( stat ) == "undefined" )
 	    continue
+	
 	var key_length = Object.keys( keys ).length
 	var obj = {}
 	for( var k =2; key_length > k; k++ ){
+	    if( typeof( line_data[k] ) == "undefined" ) 
+		continue
 	    obj[keys[k]] = line_data[k]
 	}
 	obj['@datetime'] = new Date( line_data[0] )

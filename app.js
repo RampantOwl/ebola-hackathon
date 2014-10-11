@@ -52,7 +52,7 @@ function getObject( file ){
 	obj['@datetime'] = new Date( line_data[0] )
 	obj['type'] = line_data[1]
 	
-	client.core.index( { index: 'test' , type: 'foo' , bar : 'bar' } , function( err , result ){ 
+	client.core.index( { index: 'test' , type: 'foo' , doc : { bar : 'bar' } } , function( err , result ){ 
 	    console.log( result )
 	    console.log( err ) 
 	} )

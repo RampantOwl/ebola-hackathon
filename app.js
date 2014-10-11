@@ -19,8 +19,8 @@ if ( typeof( saved.files) == "undefined" )
 var config   = require( './config/config' )
 
 function csvToElastic( file , callback){
-    console.log( file )
-    var data = fs.readFileSync( file ).toString().split('\n')
+    var data = fs.readFileSync( file ).toString().replace(/\r/gm,'\n').split("\n")
+    console.log( data )
     var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
 
     var lines = data.length
@@ -42,11 +42,13 @@ function csvToElastic( file , callback){
 	    (function(){
 		var n = k
 		var doc = { }
-		var type = line_data[1].replace(/\s/gm,'_').toLowerCase()
-		console.log( "type: " + type )
-		doc['region'] = { name : keys[n] , value : line_data[n] }
-		doc['@timestamp'] = datetime
-		if( typeof( type ) != undefined )
+		console.log( line_data[1] )
+		if( typeof( line_data[1] ) != "undefined" ){
+		    var type = line_data[1].replace(/\s/gm,'_').toLowerCase()
+		    //console.log( "type: " + type )
+		    doc['region'] = { name : keys[n] , value : line_data[n] }
+		    doc['@timestamp'] = datetime
+		    
 		    es_funcs.push( function( callback ){
 			console.log( "index: " ,country )
 			
@@ -54,8 +56,8 @@ function csvToElastic( file , callback){
 			    callback( e, r )
 			})
 		    })
-		
-	    })()
+		}    
+	    })()	    
 	}
     }
     

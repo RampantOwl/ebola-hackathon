@@ -46,7 +46,7 @@ function csvToElastic( file , callback){
 		doc['region'] = { name : keys[n] , value : line_data[n] }
 		doc['@timestamp'] = datetime
 		es_funcs.push( function( callback ){
-		    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  } , callback )
+		    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  , doc : doc } , callback )
 		})
 	    })()
 	}

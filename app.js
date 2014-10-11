@@ -5,7 +5,7 @@ var util     = require( 'util' )
 var async    = require( 'async' )
 var winston  = require('winston')
 
-var client = require('simple-elasticsearch').client.create();
+var client = require('simple-elasticsearch').client.create( { host: 'radiofreeinternet.com' });
 
 var DATA_SUBSTR_OFFSET = 5
 var DATA_DIR_NAME_FILTER = "_data"
@@ -25,18 +25,19 @@ function csvToElastic( file , callback){
 
     var lines = data.length
 
-    var keys = data[0].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
+    var keys = data[0].toLowerCase().split( ',' )
+
     for( var i=1; lines > i; i++){
-	var line_data = data[i].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
-	var stat = line_data[1]
+
+	//var line_data = data[i].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
+	var line_data = data[i].split(',')
+
 	var datetime = new Date( line_data[0] )
-	
-	if( typeof( stat ) == "undefined" )
-	    continue
-	
+
 	var key_length = Object.keys( keys ).length
 	var obj = {}
-	var es_funcs = new Array()
+	var es_funcs = []
+
 	for( var k =2; key_length > k; k++ ){
 	    (function(){
 		var n = k
@@ -44,15 +45,17 @@ function csvToElastic( file , callback){
 		var doc = { }
 		doc['region'] = { name : keys[n] , value : line_data[n] }
 		doc['@timestamp'] = datetime
+		console.log( doc )
 		es_funcs.push( function( callback ){
+		    console.log( doc )
 		    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  , doc : doc } , callback )
 		})
 	    })()
 	}
     }
-    if( typeof( es_funcs ) != "undefined" ){
-	async.series( es_funcs , callback )
-    }
+
+    async.series( es_funcs , callback )
+    
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
 
@@ -100,7 +103,6 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		})()
 	}
 	async.series( read_funcs, function( err , data_files ) {
-	    console.log( data_files )
 	    console.log( "__" )
 	    var csv_funcs = new Array()
 	    for( var i=0; Object.keys( data_files ).length > i; i++)

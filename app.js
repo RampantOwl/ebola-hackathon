@@ -19,6 +19,7 @@ if ( typeof( saved.files) == "undefined" )
 var config   = require( './config/config' )
 
 function getObject( file ){
+    console.log( file )
     var data = fs.readFileSync( file ).toString().split('\n')
     var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
 
@@ -35,19 +36,20 @@ function getObject( file ){
 	
 	var key_length = Object.keys( keys ).length
 	var obj = {}
+	var es_funcs = new Array()
 	for( var k =2; key_length > k; k++ ){
-	    if( typeof( line_data[k] ) == "undefined" ) 
-		continue
-	    
+	    var n = k
 	    var doc = { }
-	    doc['region'] = keys[k]
-	    doc['value'] = line_data[k]	    
+	    doc['region'] = keys[n]
+	    doc['value'] = line_data[n]	    
 	    doc['@timestamp'] = datetime
-	    
-	    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  ,  doc : doc  } , function( err , result ){ 
-	    } )
+	    es_funcs.push( function( callback ) {
+		client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  ,  doc : doc  } , function( err , result ){ 
+		    callback( null, result )
+		})
+	    })
 	}
-    }    
+    }
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
 
@@ -98,9 +100,8 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 	    
 	    for( var i=0; Object.keys( data_files ).length > i; i++)
 		for( var j=0; Object.keys( data_files[i] ).length > j; j++){
-		    var object = getObject( data_files[i][j] )
-		    console.log( data_files[i][j] )
-
+		    if ( typeof( data_files[i][j] ) != "undefined" )
+			var object = getObject( data_files[i][j] )
 		}
 
 	    //fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))

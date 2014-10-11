@@ -46,7 +46,7 @@ function csvToElastic( file , callback){
 		doc : region 
 	    }
 	}
-	//console.log( util.inspect( object , { depth : null } ) )
+	console.log( util.inspect( object , { depth : null } ) )
 	global.client.core.index( object , function( e ,r ){ } )
 	objects.push ( object )
 	//console.log( lines[i] )

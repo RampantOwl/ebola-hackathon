@@ -18,7 +18,7 @@ if ( typeof( saved.files) == "undefined" )
 
 var config   = require( './config/config' )
 
-function getObject( file ){
+function csvToElastic( file , callback){
     console.log( file )
     var data = fs.readFileSync( file ).toString().split('\n')
     var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
@@ -52,8 +52,11 @@ function getObject( file ){
 	}
     }
     
-    if( typeof( es_funcs ) != "undefined" )
-	async.series( es_funcs )
+    if( typeof( es_funcs ) != "undefined" ){
+	async.series( es_funcs , function( err , results ) {
+	    return callback( err , results )
+	})
+    }
     
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
@@ -102,13 +105,23 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		})()
 	}
 	async.series( read_funcs, function( err , data_files ) {
-	    
+	    var csv_funcs = new Array()
 	    for( var i=0; Object.keys( data_files ).length > i; i++)
 		for( var j=0; Object.keys( data_files[i] ).length > j; j++){
-		    if ( typeof( data_files[i][j] ) != "undefined" )
-			var object = getObject( data_files[i][j] )
+		    (function(){
+			var x = i
+			var y = j
+			var file = data_files[x][y]
+			if( typeof( file ) != "undefined")
+			    csv_funcs.push( function( callback ) {
+				csvToElastic( file , callback )
+			    })
+		    })()
 		}
-
+	    async.series( csv_funcs, function( err , results ) {
+		console.log( results )
+	    })
+	    
 	    //fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
 	})
 	//fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))

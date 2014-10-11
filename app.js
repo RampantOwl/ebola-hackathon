@@ -52,7 +52,7 @@ function getObject( file ){
 	obj['country']  = country
 	obj['datetime'] = new Date( line_data[0] )
 	obj['_key'] = line_data[1]
-	//global.logger.info( obj )
+	global.logger.info( obj )
     }    
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {

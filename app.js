@@ -4,7 +4,7 @@ var path     = require( 'path' )
 var util     = require( 'util' )
 var async    = require( 'async' )
 var winston  = require('winston')
-
+var CSV = require( 'csv-string' )
 global.client = require('simple-elasticsearch').client.create( { host : 'radiofreeinternet.com' } )
 
 var DATA_SUBSTR_OFFSET = 5
@@ -33,78 +33,43 @@ function csvToElastic( file , callback){
     for( var i = 1; line_count > i; i++ ){
 	if( typeof( lines[i] ) == "undefined" )
 	    continue
-	var line_data = lines[i].split( ',' )
+	//var line_data = lines[i].split( /(?:'[^']*')|(?:[^, ]+)/ )
+	var line_data = CSV.parse( lines[i] ).pop()
+	if( typeof( line_data ) == "undefined" )
+	    continue
 	var line_data_count = Object.keys( line_data ).length
 	for( var j = 2; line_data_count > j; j++ ){
+	    
 	    if( typeof(line_data[j]) == "undefined" || line_data[j] == '' || line_data == null)
 		continue
-	    var type = line_data[1].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'')
+	    var type = line_data[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
+
 	    if( typeof( headers[j] ) == "undefined" ){
 		var name  = "na"
 	    }else{
-		var name = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'')
+		var name = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')
 	    }
-
+	    
 	    var doc = {
+		file : file,
 		country : country ,
 		region: name,
-		data : line_data[j],
+		data : parseInt(line_data[j].replace(/\"/g,'')),
 		'@timestamp' : new Date( line_data[0] )
 	    }
+
 	    var object = { 
-		index : 'ebola',
-		type  : type,
-		
+		index :  'ebola',
+		type  : type,		
 		doc : doc
 	    }
 	}
 	console.log( util.inspect( object , { depth : null } ) )
 	global.client.core.index( object , function( e ,r ){ } )
 	objects.push ( object )
-	//console.log( lines[i] )
     }
     console.log( Object.keys( objects ).length + " objects created" )
     callback( null , objects )
-    /*      
-    for( var i=1; lines > i; i++){
-
-	//var line_data = data[i].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
-	console.log( data[i] )
-	var line_data = data[i].split(',')
-
-	var datetime = new Date( line_data[0] )
-
-	var key_length = Object.keys( keys ).length
-	var obj = {}
-	var es_funcs = []
-
-	console.log( line_data )
-	for( var k =2; key_length > k; k++ ){
-	    (function(){
-		var n = k
-		console.log( line_data[n] )
-		var type = line_data[n][1].replace(/\s/gm,'_')
-		var doc = { }
-		var header_index = 0
-		console.log( type )    
-		//console.log( "type: " + type )
-		    doc['region'] = { name : keys[n] , value : line_data[n] }
-		    doc['@timestamp'] = datetime
-		    
-		    es_funcs.push( function( callback ){
-			
-		    
-		    global.client.core.index( { index: country , type : type , doc : doc } , function( e ,r ){
-			    console.log( "Inserted : " + Object.keys ( r ).length )
-			    callback( e, r )
-			})
-		    })
-	    })()
-	}
-    }
-    
-    async.series( es_funcs , callback )
-    */
     
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
@@ -168,13 +133,10 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		}
 
 	    async.series( csv_funcs, function( err , results ) {
-		//console.log( results )
-	    })
-	    
-	    //fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
+		fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
+
+	    })	    
 	})
-	//fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
     })
-    
 })
 

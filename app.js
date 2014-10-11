@@ -5,7 +5,6 @@ var path     = require( 'path' )
 var async    = require( 'async' )
 var winston  = require('winston')
 
-var Elasticsearch = require( 'winston-elasticsearch' )
 var client = require('simple-elasticsearch').client.create();
 
 var DATA_SUBSTR_OFFSET = 5
@@ -52,7 +51,8 @@ function getObject( file ){
 	obj['index']  = country
 	obj['@datetime'] = new Date( line_data[0] )
 	obj['type'] = line_data[1]
-	client.core.index( obj , function( err , result ){ 
+	
+	client.core.index( { index: 'test' , type: 'foo' , bar : 'bar' } , function( err , result ){ 
 	    console.log( result )
 	    console.log( err ) 
 	} )

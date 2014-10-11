@@ -38,10 +38,11 @@ function getObject( file ){
 	var obj = {}
 	var es_funcs = new Array()
 	for( var k =2; key_length > k; k++ ){
+	    if( keys[n] == "totals" )
+		continue 
 	    var n = k
 	    var doc = { }
-	    doc['region'] = keys[n]
-	    doc['value'] = line_data[n]	    
+	    doc['region'] = { name : keys[n] , value : line_data[n] }
 	    doc['@timestamp'] = datetime
 	    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  ,  doc : doc  } , function() { } )
 	}

@@ -6,6 +6,7 @@ var async    = require( 'async' )
 var winston  = require('winston')
 
 var Elasticsearch = require( 'winston-elasticsearch' )
+var client = require('simple-elasticsearch').client.create();
 
 var DATA_SUBSTR_OFFSET = 5
 var DATA_DIR_NAME_FILTER = "_data"
@@ -22,7 +23,6 @@ var config   = require( './config/config' )
 global.logger = new (winston.Logger)({
     transports: [
 	new (winston.transports.Console)( { 'timestamp' : true } ),
-	new Elasticsearch( { level : 'info' } ),
     ]
 })
 
@@ -49,10 +49,11 @@ function getObject( file ){
 		continue
 	    obj[keys[k]] = line_data[k]
 	}
-	obj['country']  = country
-	obj['datetime'] = new Date( line_data[0] )
-	obj['_key'] = line_data[1]
-	global.logger.info( obj )
+	obj['index']  = country
+	obj['@datetime'] = new Date( line_data[0] )
+	obj['type'] = line_data[1]
+	client.core.index( obj , function( err , result ){ console.log( err ) } )
+	console.log( obj )
     }    
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {

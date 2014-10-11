@@ -48,7 +48,7 @@ function getObject( file ){
 	    if( typeof( line_data[k] ) == "undefined" ) 
 		continue
 	    var  doc = {
-		[keys[k]] : line_data[k]
+		keys[k] : line_data[k]
 	    }
 	    client.core.index( { index: country , type: line_data[1], '@datetime' : datetime  , doc : doc , function( err , result ){ 
 		console.log( result )

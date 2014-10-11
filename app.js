@@ -49,11 +49,13 @@ function getObject( file ){
 		continue
 	    
 	    var doc = { }
-	    doc[keys[k]] = line_data[k]
+	    doc['key'] = keys[k]
+	    doc['val'] = line_data[k]	    
 	    doc['@datetime'] = datetime
+	    
+	    //doc[keys[k]] = line_data[k]
 	    client.core.index( { index: country , type: line_data[1], '@datetime' : datetime  ,  doc : doc  } , function( err , result ){ 
-		console.log( result )
-		console.log( err ) 
+		console.log( "." )
 	    } )
 	}
     }    

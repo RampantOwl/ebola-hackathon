@@ -50,7 +50,7 @@ function getObject( file ){
 	    
 	    var doc = { }
 	    doc[keys[k]] = line_data[k]
-	    
+	    doc['@datetime'] = datetime
 	    client.core.index( { index: country , type: line_data[1], '@datetime' : datetime  ,  doc : doc  } , function( err , result ){ 
 		console.log( result )
 		console.log( err ) 

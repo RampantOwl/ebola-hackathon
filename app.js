@@ -51,13 +51,9 @@ function csvToElastic( file , callback){
 	    })()
 	}
     }
-    
     if( typeof( es_funcs ) != "undefined" ){
-	async.series( es_funcs , function( err , results ) {
-	    return callback( err , results )
-	})
+	async.series( es_funcs , callback )
     }
-    
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
 
@@ -119,6 +115,7 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		    })()
 		}
 	    async.series( csv_funcs, function( err , results ) {
+		console.log( err )
 		console.log( results )
 	    })
 	    

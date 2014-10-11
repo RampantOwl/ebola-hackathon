@@ -37,17 +37,26 @@ function csvToElastic( file , callback){
 	var line_data_count = Object.keys( line_data ).length
 	
 	for( var j = 2; line_data_count > j; j++ ){
+	    if( typeof(line_data[j]) == "undefined" || line_data[j] == '' || line_data == null)
+		continue
 	    var type = line_data[1].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'')
-	    var region = {
-		name : headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,''),
-		value : line_data[j],
+	    if( typeof( headers[j] ) == "undefined" ){
+		var name  = "na"
+	    }else{
+		var name = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'')
+	    }
+
+	    var doc = {
+		country : country ,
+		region: name,
+		data : line_data[j],
 		'@timestamp' : new Date( line_data[0] )
 	    }
 	    var object = { 
-		index : country ,
+		index : 'ebola',
 		type  : type,
 		
-		doc : region 
+		doc : doc
 	    }
 	}
 	console.log( util.inspect( object , { depth : null } ) )

@@ -18,15 +18,6 @@ if ( typeof( saved.files) == "undefined" )
 
 var config   = require( './config/config' )
 
-
-global.logger = new (winston.Logger)({
-    transports: [
-	new (winston.transports.Console)( { 'timestamp' : true } ),
-    ]
-})
-
-global.logger.info( "Started" , { dir : config.datadir })
-
 function getObject( file ){
     var data = fs.readFileSync( file ).toString().split('\n')
     var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
@@ -53,7 +44,6 @@ function getObject( file ){
 	    doc['value'] = line_data[k]	    
 	    doc['@timestamp'] = datetime
 	    
-	    //doc[keys[k]] = line_data[k]
 	    client.core.index( { index: country , type: line_data[1], '@timestamp' : datetime  ,  doc : doc  } , function( err , result ){ 
 	    } )
 	}

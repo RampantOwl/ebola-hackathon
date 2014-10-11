@@ -48,16 +48,11 @@ function getObject( file ){
 	    if( typeof( line_data[k] ) == "undefined" ) 
 		continue
 	    obj[keys[k]] = line_data[k]
+	    client.core.index( { index: country , type: line_data[1], '@datetime' : datetime  , doc : { keys[k]: line_data[k] } } , function( err , result ){ 
+		console.log( result )
+		console.log( err ) 
+	    } )
 	}
-	obj['index']  = country
-	
-	obj['type'] = line_data[1]
-	
-	client.core.index( { index: country , type: line_data[1], '@datetime' : datetime  , doc : obj } , function( err , result ){ 
-	    console.log( result )
-	    console.log( err ) 
-	} )
-
     }    
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {

@@ -30,7 +30,10 @@ global.logger.info( "Started" , { dir : config.datadir })
 
 function getObject( file ){
     var data = fs.readFileSync( file ).toString().split('\n')
+    var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
+
     var lines = data.length
+
     var keys = data[0].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
     for( var i=1; lines > i; i++){
 	var line_data = data[i].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').split(',')
@@ -46,9 +49,10 @@ function getObject( file ){
 		continue
 	    obj[keys[k]] = line_data[k]
 	}
-	obj['@datetime'] = new Date( line_data[0] )
+	obj['country']  = country
+	obj['datetime'] = new Date( line_data[0] )
 	obj['_key'] = line_data[1]
-	global.logger.info( obj )
+	//global.logger.info( obj )
     }    
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {

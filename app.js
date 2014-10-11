@@ -49,8 +49,9 @@ function getObject( file ){
 		continue
 	    
 	    var doc = { }
-	    doc['key'] = keys[k]
-	    doc['val'] = line_data[k]	    
+	    doc['total'] = keys[1]
+	    doc['region'] = keys[k]
+	    doc['value'] = line_data[k]	    
 	    doc['@datetime'] = datetime
 	    
 	    //doc[keys[k]] = line_data[k]

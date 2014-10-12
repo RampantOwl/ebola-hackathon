@@ -4,12 +4,10 @@ var path     = require( 'path' )
 var util     = require( 'util' )
 var async    = require( 'async' )
 
-var winston  = require('winston')
 var parse    = require( 'csv-parse' )
-var CSV = require( 'csv-string' )
+
 global.client = require('simple-elasticsearch').client.create( { host : 'radiofreeinternet.com' } )
 
-var DATA_SUBSTR_OFFSET = 5
 var DATA_DIR_NAME_FILTER = "_data"
 
 var SAVE_FILE = "./config/saved"
@@ -20,29 +18,35 @@ if ( typeof( saved.files) == "undefined" )
 
 var config   = require( './config/config' )
 
+/* Functions that creates key/value mappings for a csv file and sends it to elasticsearch*/
 function csvToElastic( file , callback){
-    console.log( "file: " + file )
-    var lines = fs.readFileSync( file ).toString().replace(/\r/gm,'\n').split("\n")
+    console.log( "Processing " + file )
+    
     var objects = new Array()
+    var funcs = new Array() /* Stores functions that will later be run in parallel */
+    
     var file_data = fs.readFileSync( file ).toString()
-    var funcs = new Array()
+    var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
+    
+    /* Takes csv data and returns 2-dimentional array of its contents */
     parse(file_data , function( err , lines ) {	
 	var headers = lines[0]
 	var line_count = Object.keys( lines ).length
-
-	var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
-	for( var i = 1; line_count > i; i++ ){	    
+	
+	/* Begin reading at line after header */
+	/* Each line has data for one type of statistic, ex: contacts confirmed */
+	for( var i = 1; line_count > i; i++ ){
 	    var columns = lines[i]
 	    var column_count = Object.keys( lines[i] ).length
 	    var stat_name = columns[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
-
+	    /* For each column, create a mapping of type, region and data */
 	    for( var j = 2; column_count > j; j++){
 		(function(){
-		    var k = j
+		    var k = j /* Bind k since in closure */
 		    var region    = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')
 		    var data      = parseInt(columns[k])
-
 		    var timestamp = new Date( columns[0] )
+		    
 		    var doc = {
 			file : file,
 			country : country ,
@@ -58,6 +62,7 @@ function csvToElastic( file , callback){
 			doc : doc
 		    }
 		    
+		    /* If there was any data for this line, store a function that sends this object in funcs*/
 		    if( typeof( data ) != "undefined" && data !="" && data !=null && isNaN(data)==false)
 			funcs.push( function( callback ){
 			    global.client.core.index( object ,callback )
@@ -65,18 +70,20 @@ function csvToElastic( file , callback){
 		})()		
 	    }
 	}
+	
+	/* Run all the insert functions in parallell */
 	async.parallel ( funcs , function( e , r ){
 	    console.log( Object.keys( r ).length + " insertions" )
 	    return callback ( e , r )
 	})
-			
+	
     })
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
-
     var count     = Object.keys( files ).length
     var funcs =  new Array()
-    
+
+    /* Create functions that will read the data directory */
     for ( var n = 0; count > n; n++ ){
 	(function(){
 	    var i = n
@@ -89,13 +96,15 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 	})()
     }
 
-    
+    /* Run the functions in a series*/
     async.series( funcs , function( err , results ) {
 	var read_funcs = new Array()
 	var results_count = Object.keys( results ).length
+	/* For each file found, create a list of functions that will read those files unless the file has been read */
 	for( var i = 0; results_count > i; i++ ){
 	    var resolved_path = results[i]
 	    var stats = fs.statSync( resolved_path )
+	    /* Only read if it is a directory matching the country */
 	    if( stats.isDirectory && resolved_path.lastIndexOf( DATA_DIR_NAME_FILTER ) == ( resolved_path.length -  DATA_DIR_NAME_FILTER.length ) )
 		(function(){
 		    var r_path =resolved_path
@@ -117,8 +126,8 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		    })
 		})()
 	}
-	async.series( read_funcs, function( err , data_files ) {
-	    console.log( "__" )
+	/* Iterate over the files that were found, and create a list of functions that will run csvToElastic */
+	async.series( read_funcs, function( err , data_files ) {	    
 	    var csv_funcs = new Array()
 	    for( var i=0; Object.keys( data_files ).length > i; i++)
 		for( var j=0; Object.keys( data_files[i] ).length > j; j++){
@@ -134,6 +143,8 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 
 	    async.series( csv_funcs, function( err , results ) {
 		console.log( "Done ")
+		
+		/* Save the files that have been read*/
 		fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
 
 	    })	    

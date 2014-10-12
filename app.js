@@ -41,6 +41,7 @@ function csvToElastic( file , callback){
 		    var k = j
 		    var region    = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')
 		    var data      = parseInt(columns[k])
+
 		    var timestamp = new Date( columns[0] )
 		    var doc = {
 			file : file,
@@ -55,10 +56,11 @@ function csvToElastic( file , callback){
 			type  : type,		
 			doc : doc
 		    }
-
-		    funcs.push( function( callback ){
-			global.client.core.index( object ,callback )
-		    })
+		    
+		    if( typeof( data ) != undefined || data !="" || data !=null )
+			funcs.push( function( callback ){
+			    global.client.core.index( object ,callback )
+			})
 		})()		
 	    }
 	}

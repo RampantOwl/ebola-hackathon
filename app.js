@@ -63,7 +63,7 @@ function csvToElastic( file , callback){
 	    }
 	}
 	async.parallel ( funcs , function( e , r ){
-	    console.log( r )
+	    console.log( Object.keys( r ).length + " insertions" )
 	    return callback ( e , r )
 	})
 			

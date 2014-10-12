@@ -3,7 +3,9 @@ var util     = require( 'util' )
 var path     = require( 'path' )
 var util     = require( 'util' )
 var async    = require( 'async' )
+
 var winston  = require('winston')
+var parse    = require( 'csv-parse' )
 var CSV = require( 'csv-string' )
 global.client = require('simple-elasticsearch').client.create( { host : 'radiofreeinternet.com' } )
 
@@ -21,67 +23,51 @@ var config   = require( './config/config' )
 function csvToElastic( file , callback){
     console.log( "file: " + file )
     var lines = fs.readFileSync( file ).toString().replace(/\r/gm,'\n').split("\n")
-    
-    var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
-
-
-    var headers = lines[0].toLowerCase().split( ',' )
-    
-    var line_count = Object.keys( lines ).length
     var objects = new Array()
-    
-    var line_cleaned = new Array()
+    var file_data = fs.readFileSync( file ).toString()
+    var funcs = new Array()
+    parse(file_data , function( err , lines ) {	
+	var headers = lines[0]
+	var line_count = Object.keys( lines ).length
 
-	
-    for( var i = 1; line_count > i; i++ ){
-	if( typeof( lines[i] ) == "undefined" )
-	    continue
-	//var line_data = lines[i].split( /(?:'[^']*')|(?:[^, ]+)/ )
-	var line_data = CSV.parse( lines[i] ).pop()
-	if( typeof( line_data ) == "undefined" ){
-	    
-	    console.log( "Could not parse:" )
-	    console.log( file )
-	    console.log( lines ) 
-	    console.log( lines[i] )
-	    console.log( line_data )
-	    console.log( CSV.parse( lines[i] ) )
-	    process.exit()
-	    continue
-	}
-	var line_data_count = Object.keys( line_data ).length
-	for( var j = 1; line_data_count > j; j++ ){	    
-	    if( typeof(line_data[j]) == "undefined" || line_data[j] == '' || line_data == null || line_data[j]==0)
-		continue
-	    var type = line_data[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
+	var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
+	for( var i = 1; line_count > i; i++ ){	    
+	    var columns = lines[i]
+	    var column_count = Object.keys( lines[i] ).length
+	    var type = columns[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
 
-	    if( typeof( headers[j] ) == "undefined" ){
-		var name  = "na"
-	    }else{
-		var name = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')
-	    }
-	    
-	    var doc = {
-		file : file,
-		country : country ,
-		region: name,
-		data : parseInt(line_data[j].replace(/\"/g,'')),
-		'@timestamp' : new Date( line_data[0] )
-	    }
+	    for( var j = 1; column_count > j; j++){
+		(function(){
+		    var k = j
+		    var region    = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')
+		    var data      = parseInt(columns[k])
+		    var timestamp = new Date( columns[0] )
+		    var doc = {
+			file : file,
+			country : country ,
+			region : region,
+			data : data,
+			'@timestamp' : timestamp
+		    }
 
-	    var object = { 
-		index :  'ebola',
-		type  : type,		
-		doc : doc
+		    var object = { 
+			index :  'ebola',
+			type  : type,		
+			doc : doc
+		    }
+
+		    funcs.push( function( callback ){
+			global.client.core.index( object ,callback )
+		    })
+		})()		
 	    }
 	}
-	console.log( util.inspect( object , { depth : null } ) )
-	global.client.core.index( object , function( e ,r ){ } )
-	objects.push ( object )
-    }
-    console.log( Object.keys( objects ).length + " objects created" )
-    callback( null , objects )
-    
+	async.parallel ( funcs , function( e , r ){
+	    console.log( r )
+	    return callback ( e , r )
+	})
+			
+    })
 }
 fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
 
@@ -144,6 +130,7 @@ fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) 
 		}
 
 	    async.series( csv_funcs, function( err , results ) {
+		console.log( "Done ")
 		fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
 
 	    })	    

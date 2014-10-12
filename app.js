@@ -43,7 +43,7 @@ function csvToElastic( file , callback){
 	    for( var j = 2; column_count > j; j++){
 		(function(){
 		    var k = j /* Bind k since in closure */
-		    var region    = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')
+		    var region    = headers[k].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')
 		    var data      = parseInt(columns[k])
 		    var timestamp = new Date( columns[0] )
 		    

@@ -57,7 +57,7 @@ function csvToElastic( file , callback){
 			doc : doc
 		    }
 		    
-		    if( typeof( data ) != "undefined" && data !="" && data !=null)
+		    if( typeof( data ) != "undefined" && data !="" && data !=null && isNan(data)==false)
 			funcs.push( function( callback ){
 			    global.client.core.index( object ,callback )
 			})

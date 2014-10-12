@@ -34,7 +34,7 @@ function csvToElastic( file , callback){
 	for( var i = 1; line_count > i; i++ ){	    
 	    var columns = lines[i]
 	    var column_count = Object.keys( lines[i] ).length
-	    var type = columns[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
+	    var stat_name = columns[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
 
 	    for( var j = 2; column_count > j; j++){
 		(function(){
@@ -48,12 +48,13 @@ function csvToElastic( file , callback){
 			country : country ,
 			region : region,
 			data : data,
+			stat_name : stat_name,
 			'@timestamp' : timestamp
 		    }
 
 		    var object = { 
 			index :  'ebola',
-			type  : type,		
+			type  : 'stat',		
 			doc : doc
 		    }
 		    

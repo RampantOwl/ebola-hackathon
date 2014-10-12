@@ -29,18 +29,29 @@ function csvToElastic( file , callback){
     
     var line_count = Object.keys( lines ).length
     var objects = new Array()
+    
+    var line_cleaned = new Array()
 
+	
     for( var i = 1; line_count > i; i++ ){
 	if( typeof( lines[i] ) == "undefined" )
 	    continue
 	//var line_data = lines[i].split( /(?:'[^']*')|(?:[^, ]+)/ )
 	var line_data = CSV.parse( lines[i] ).pop()
-	if( typeof( line_data ) == "undefined" )
-	    continue
-	var line_data_count = Object.keys( line_data ).length
-	for( var j = 2; line_data_count > j; j++ ){
+	if( typeof( line_data ) == "undefined" ){
 	    
-	    if( typeof(line_data[j]) == "undefined" || line_data[j] == '' || line_data == null)
+	    console.log( "Could not parse:" )
+	    console.log( file )
+	    console.log( lines ) 
+	    console.log( lines[i] )
+	    console.log( line_data )
+	    console.log( CSV.parse( lines[i] ) )
+	    process.exit()
+	    continue
+	}
+	var line_data_count = Object.keys( line_data ).length
+	for( var j = 1; line_data_count > j; j++ ){	    
+	    if( typeof(line_data[j]) == "undefined" || line_data[j] == '' || line_data == null || line_data[j]==0)
 		continue
 	    var type = line_data[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
 

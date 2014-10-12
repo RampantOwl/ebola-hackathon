@@ -36,7 +36,7 @@ function csvToElastic( file , callback){
 	    var column_count = Object.keys( lines[i] ).length
 	    var type = columns[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
 
-	    for( var j = 1; column_count > j; j++){
+	    for( var 2 = 1; column_count > j; j++){
 		(function(){
 		    var k = j
 		    var region    = headers[j].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')

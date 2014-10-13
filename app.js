@@ -108,10 +108,10 @@ recursive( path.resolve( __dirname , config.datadir ) , function( err , files ){
 	}
     }
     async.series( csv_funcs, function( err , results ) {
-	console.log( "Done ")	
+	console.log( "Done ")
 	/* Save the files that have been read*/
 	fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
-
+	console.log( "Saved %s" , SAVE_FILE )
     })	    
 })
 

@@ -9,8 +9,6 @@ var recursive = require( 'recursive-readdir' )
 
 global.client = require('simple-elasticsearch').client.create( { host : 'radiofreeinternet.com' } )
 
-var DATA_DIR_NAME_FILTER = "_data"
-
 var SAVE_FILE = "./config/saved"
 
 var saved = JSON.parse ( fs.readFileSync( SAVE_FILE ) )
@@ -27,7 +25,7 @@ function csvToElastic( file , callback){
     var funcs = new Array() /* Stores functions that will later be run in parallel */
     
     var file_data = fs.readFileSync( file ).toString()
-    var country = file.match(/([a-z]*)_data/g)[0].replace("_data","")
+    var country = file.replace(/_data$/,'')    
     
     /* Takes csv data and returns 2-dimentional array of its contents */
     parse(file_data , function( err , lines ) {	

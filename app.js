@@ -17,7 +17,7 @@ if ( typeof( saved.files) == "undefined" )
 
 var config   = require( './config/config' )
 
-global.client = require('simple-elasticsearch').client.create( { host : config.host } )
+global.client = require('simple-elasticsearch').client.create( { host : config.elastic_host } )
 
 /* Functions that creates key/value mappings for a csv file and sends it to elasticsearch*/
 function csvToElastic( file , callback){

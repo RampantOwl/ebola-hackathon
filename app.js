@@ -39,6 +39,19 @@ function getCountryFromFilepath( filepath ){
     return country
 }
 
+function createDocument(file , country , region , data , stat_name , timestamp ){
+    var document = {
+	file : file,
+	country : country ,
+	region : region,
+	data : data,
+	stat_name : stat_name,
+	'@timestamp' : timestamp
+    }
+
+    return document
+}
+
 /* Functions that creates key/value mappings for a csv file and sends it to elasticsearch*/
 function csvToElastic( file , callback){
     console.log( "File: %s ", file )
@@ -72,14 +85,7 @@ function csvToElastic( file , callback){
 		    var data      = parseInt(columns[k])
 		    var timestamp = new Date( columns[0] )
 		    
-		    var doc = {
-			file : file,
-			country : country ,
-			region : region,
-			data : data,
-			stat_name : stat_name,
-			'@timestamp' : timestamp
-		    }
+		    var doc = createDocument( file , country , region , data , stat_name , timestamp )
 
 		    var object = { 
 			index :  'ebola',
@@ -98,14 +104,18 @@ function csvToElastic( file , callback){
 	
 	/* Run all the insert functions in parallell */
 	async.parallel ( funcs , function( e , r ){
-	    console.log( e )
-	    console.log( "Insertions: %s" ,Object.keys( r ).length )
+	    console.log( "Errors inserting: %s",  e.length )
+	    console.log( "Attempted insertions: %s" ,Object.keys( r ).length )
 	    return callback ( e , r )
 	})
 	
     })
 }
 
+if( typeof( config.datadir ) == "undefined" ){
+    console.log( "Set datadir directive in config file." )
+    proces.exit()
+}
 recursive( path.resolve( __dirname , config.datadir ) , function( err , files ){
 
     var csv_funcs = new Array()
@@ -128,7 +138,7 @@ recursive( path.resolve( __dirname , config.datadir ) , function( err , files ){
 
     console.log( "Parsing %s csv files", csv_funcs.length )
     async.series( csv_funcs, function( err , results ) {
-	console.log( "Done ")
+	console.log( "Files processed: %s", results.length )
 	/* Save the files that have been read*/
 	fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
 	console.log( "Saved %s" , SAVE_FILE )

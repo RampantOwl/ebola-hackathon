@@ -7,8 +7,6 @@ var async    = require( 'async' )
 var parse    = require( 'csv-parse' )
 var recursive = require( 'recursive-readdir' )
 
-
-
 var SAVE_FILE = "./config/saved"
 
 var saved = JSON.parse ( fs.readFileSync( SAVE_FILE ) )
@@ -19,6 +17,28 @@ var config   = require( './config/config' )
 
 global.client = require('simple-elasticsearch').client.create( { host : config.elastic_host } )
 
+function cleanField( dirty_field ){    
+    return dirty_field.toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
+}
+
+/* Try to grok a country name from somewhere in the file path*/
+function getCountryFromFilepath( filepath ){
+    
+    var file_path_seperated = filepath.split(path.sep)
+    var file_dir = file_path_seperated[file_path_seperated.length -2]
+    var file_name = file_path_seperated[file_path_seperated.length -1]
+    
+    var country = file_dir.substr(0,file_dir.indexOf("_data"))
+    
+    if( typeof( country ) == "undefined" || country=="" || country==null)
+	country = file_name.substr(0,file_name.indexOf("_case_data"))
+
+    if( typeof( country ) == "undefined" || country=="" || country==null)
+	country = "na"
+
+    return country
+}
+
 /* Functions that creates key/value mappings for a csv file and sends it to elasticsearch*/
 function csvToElastic( file , callback){
     console.log( "File: %s ", file )
@@ -27,14 +47,10 @@ function csvToElastic( file , callback){
     var funcs = new Array() /* Stores functions that will later be run in parallel */
     
     var file_data = fs.readFileSync( file ).toString()
-    var file_path_seperated = file.split(path.sep)
     
-    var file_dir = file_path_seperated[file_path_seperated.length -2]
-    var file_name = file_path_seperated[file_path_seperated.length -1]
-    var country = file_dir.substr(0,file_dir.indexOf("_data"))
     
-    if( typeof( country ) == "undefined" || country=="" || country==null)
-	var country = file_name.substr(0,file_name.indexOf("_case_data"))
+    var country = getCountryFromFilepath( file )
+    
 
     console.log( "Country Name: %s" ,country )
     /* Takes csv data and returns 2-dimentional array of its contents */
@@ -47,12 +63,12 @@ function csvToElastic( file , callback){
 	for( var i = 1; line_count > i; i++ ){
 	    var columns = lines[i]
 	    var column_count = Object.keys( lines[i] ).length
-	    var stat_name = columns[1].toLowerCase().replace(/[\s\t`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
+	    var stat_name = cleanField(columns[1])
 	    /* For each column, create a mapping of type, region and data */
 	    for( var j = 2; column_count > j; j++){
 		(function(){
 		    var k = j /* Bind k since in closure */
-		    var region    = headers[k].toLowerCase().replace(/\s/g,'_').replace(/`/g,'').replace(/'/g,'').replace(/\%/,'')
+		    var region    = cleanField(headers[k])
 		    var data      = parseInt(columns[k])
 		    var timestamp = new Date( columns[0] )
 		    
@@ -91,22 +107,26 @@ function csvToElastic( file , callback){
 }
 
 recursive( path.resolve( __dirname , config.datadir ) , function( err , files ){
+
     var csv_funcs = new Array()
     
     for( var i=0; files.length > i; i++){
+	if( typeof( saved[files[i]] ) != "undefined" )
+	    continue
+
 	if( (files[i].indexOf('.csv') > -1 ) && (files[i].indexOf('ebola_') > -1 || files[i].indexOf('case_') > -1 ) ){
-		(function(){
-		    if( typeof( saved[files[i]] ) != "undefined" )
-			return		    
-		    saved[files[i]] = true		
-		    var j = i
-		    var file = files[i]
-		    csv_funcs.push( function( callback ) {			    
-			csvToElastic( file , callback )
-		    })
-		})()
+	    (function(){
+		saved[files[i]] = true		
+		var j = i
+		var file = files[i]
+		csv_funcs.push( function( callback ) {			    
+		    csvToElastic( file , callback )
+		})
+	    })()
 	}
     }
+
+    console.log( "Parsing %s csv files", csv_funcs.length )
     async.series( csv_funcs, function( err , results ) {
 	console.log( "Done ")
 	/* Save the files that have been read*/

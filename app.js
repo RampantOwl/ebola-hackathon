@@ -25,7 +25,9 @@ function csvToElastic( file , callback){
     var funcs = new Array() /* Stores functions that will later be run in parallel */
     
     var file_data = fs.readFileSync( file ).toString()
-    var country = path.basename(file).replace(/_data$/,'')    
+    var file_path_seperated = path.sep( file )
+    
+    var country = file[file.length-2].replace(/_data$/,'')    
     
     /* Takes csv data and returns 2-dimentional array of its contents */
     parse(file_data , function( err , lines ) {	

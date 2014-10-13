@@ -28,7 +28,12 @@ function csvToElastic( file , callback){
     var file_path_seperated = file.split(path.sep)
     
     var file_dir = file_path_seperated[file_path_seperated.length -2]
+    var file_name = file_path_seperated[file_path_seperated.length -1]
     var country = file_dir.substr(0,file_dir.indexOf("_data"))
+    
+    if( typeof( country ) == "undefined" )
+	var country = file_name(0,file_name.indexOf("_case_data"))
+
     console.log( "Country Name: %s" ,country )
     /* Takes csv data and returns 2-dimentional array of its contents */
     parse(file_data , function( err , lines ) {	

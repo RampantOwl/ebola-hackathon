@@ -7,7 +7,7 @@ var async    = require( 'async' )
 var parse    = require( 'csv-parse' )
 var recursive = require( 'recursive-readdir' )
 
-global.client = require('simple-elasticsearch').client.create( { host : 'radiofreeinternet.com' } )
+
 
 var SAVE_FILE = "./config/saved"
 
@@ -16,6 +16,8 @@ if ( typeof( saved.files) == "undefined" )
     saved.files = { }
 
 var config   = require( './config/config' )
+
+global.client = require('simple-elasticsearch').client.create( { host : config.host } )
 
 /* Functions that creates key/value mappings for a csv file and sends it to elasticsearch*/
 function csvToElastic( file , callback){
@@ -80,6 +82,8 @@ function csvToElastic( file , callback){
 	
 	/* Run all the insert functions in parallell */
 	async.parallel ( funcs , function( e , r ){
+	    console.log( e )
+	    console.log( r )
 	    console.log( "Insertions: %s" ,Object.keys( r ).length )
 	    return callback ( e , r )
 	})

@@ -19,7 +19,7 @@ var config   = require( './config/config' )
 
 /* Functions that creates key/value mappings for a csv file and sends it to elasticsearch*/
 function csvToElastic( file , callback){
-    console.log( "Processing " + file )
+    console.log( "File: %s ", file )
     
     var objects = new Array()
     var funcs = new Array() /* Stores functions that will later be run in parallel */
@@ -27,8 +27,8 @@ function csvToElastic( file , callback){
     var file_data = fs.readFileSync( file ).toString()
     var file_path_seperated = file.split(path.sep)
     
-    var country = file_path_seperated[file_path_seperated.length-2].replace(/_data$/,'')    
-    
+    var country = path.basename(file).substr(0,path.basename(file).indexOf("_case_data"))
+    console.log( "Country Name: %s" ,country )
     /* Takes csv data and returns 2-dimentional array of its contents */
     parse(file_data , function( err , lines ) {	
 	var headers = lines[0]
@@ -74,7 +74,7 @@ function csvToElastic( file , callback){
 	
 	/* Run all the insert functions in parallell */
 	async.parallel ( funcs , function( e , r ){
-	    console.log( Object.keys( r ).length + " insertions" )
+	    console.log( "Insertions: %s" ,Object.keys( r ).length )
 	    return callback ( e , r )
 	})
 	

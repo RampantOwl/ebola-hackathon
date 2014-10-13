@@ -5,6 +5,7 @@ var util     = require( 'util' )
 var async    = require( 'async' )
 
 var parse    = require( 'csv-parse' )
+var recursive = require( 'recursive-readdir' )
 
 global.client = require('simple-elasticsearch').client.create( { host : 'radiofreeinternet.com' } )
 
@@ -79,76 +80,29 @@ function csvToElastic( file , callback){
 	
     })
 }
-fs.readdir( path.resolve( __dirname , config.datadir ), function( err , files ) {
-    var count     = Object.keys( files ).length
-    var funcs =  new Array()
 
-    /* Create functions that will read the data directory */
-    for ( var n = 0; count > n; n++ ){
-	(function(){
-	    var i = n
-	    var dir = files[i]
-	    funcs.push( 
-		function( callback ) { 
-		    var resolved_path = path.resolve( __dirname , config.datadir , files[i] )  
-		    return callback( null ,  resolved_path  ) 
-		} )
-	})()
-    }
-
-    /* Run the functions in a series*/
-    async.series( funcs , function( err , results ) {
-	var read_funcs = new Array()
-	var results_count = Object.keys( results ).length
-	/* For each file found, create a list of functions that will read those files unless the file has been read */
-	for( var i = 0; results_count > i; i++ ){
-	    var resolved_path = results[i]
-	    var stats = fs.statSync( resolved_path )
-	    /* Only read if it is a directory matching the country */
-	    if( stats.isDirectory && resolved_path.lastIndexOf( DATA_DIR_NAME_FILTER ) == ( resolved_path.length -  DATA_DIR_NAME_FILTER.length ) )
+recursive( path.resolve( __dirname , config.datadir ) , function( err , files ){
+    var csv_funcs = new Array()
+    
+    for( var i=0; files.length > i; i++){
+	if( (files[i].indexOf('.csv') > -1 ) && (files[i].indexOf('ebola_') > -1 || files[i].indexOf('case_') > -1 ) ){
 		(function(){
-		    var r_path =resolved_path
-		    read_funcs.push( function( callback ) {
-			fs.readdir( r_path , function( err , files ) {
-			    var file_count = Object.keys( files ).length
-			    var file_list  = new Array()
-			    for( var j = 0; file_count > j; j++){
-				/* Filter out data files*/
-				if( (files[j].indexOf('.csv') > -1 ) && (files[j].indexOf('ebola_') > -1 || files[j].indexOf('case_') > -1 ) ){
-				    if( typeof( saved[files[j]] ) == "undefined" ){
-					saved[files[j]] = true
-					file_list.push( path.resolve( r_path , files[j] ) )
-				    }
-				}
-			    }
-			    return callback( null , file_list )
-			})
+		    if( typeof( saved[files[i]] ) != "undefined" )
+			return		    
+		    saved[files[i]] = true		
+		    var j = i
+		    var file = files[i]
+		    csv_funcs.push( function( callback ) {			    
+			csvToElastic( file , callback )
 		    })
 		})()
 	}
-	/* Iterate over the files that were found, and create a list of functions that will run csvToElastic */
-	async.series( read_funcs, function( err , data_files ) {	    
-	    var csv_funcs = new Array()
-	    for( var i=0; Object.keys( data_files ).length > i; i++)
-		for( var j=0; Object.keys( data_files[i] ).length > j; j++){
-		    (function(){
-			var x = i
-			var y = j
-			var file = data_files[x][y]
-			csv_funcs.push( function( callback ) {			    
-			    csvToElastic( file , callback )
-			})
-		    })()
-		}
+    }
+    async.series( csv_funcs, function( err , results ) {
+	console.log( "Done ")	
+	/* Save the files that have been read*/
+	fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
 
-	    async.series( csv_funcs, function( err , results ) {
-		console.log( "Done ")
-		
-		/* Save the files that have been read*/
-		fs.writeFileSync( SAVE_FILE , JSON.stringify( saved ))
-
-	    })	    
-	})
-    })
+    })	    
 })
 

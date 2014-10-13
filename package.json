@@ -8,6 +8,7 @@
     "csv-parse": "0.0.6",
     "csv-string": "^2.2.2",
     "node-sync": "0.0.8",
+    "recursive-readdir": "^1.2.0",
     "simple-elasticsearch": "^0.2.1",
     "winston": "^0.8.0",
     "winston-elasticsearch": "^0.1.1"

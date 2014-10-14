@@ -104,7 +104,6 @@ function csvToElastic( file , callback){
 	
 	/* Run all the insert functions in parallell */
 	async.parallel ( funcs , function( e , r ){
-	    console.log( "Errors inserting: %s",  e.length )
 	    console.log( "Attempted insertions: %s" ,Object.keys( r ).length )
 	    return callback ( e , r )
 	})

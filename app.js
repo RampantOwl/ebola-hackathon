@@ -123,7 +123,7 @@ recursive( path.resolve( __dirname , config.datadir ) , function( err , files ){
 	if( typeof( saved[files[i]] ) != "undefined" )
 	    continue
 
-	if( (files[i].indexOf('.csv') > -1 ) && (files[i].indexOf('ebola_') > -1 || files[i].indexOf('case_') > -1 ) ){
+	if( (files[i].indexOf('.csv') > -1 ) && (files[i].indexOf('ebola_') > -1 || files[i].indexOf('case_') > -1 || files[i].indexOf('liberia_data/') > -1) ){
 	    (function(){
 		saved[files[i]] = true		
 		var j = i
